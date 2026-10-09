@@ -1308,9 +1308,10 @@ router_settings:
 | LITELLM_SENSITIVE_ROUTING_TTL | TTL in seconds for sticky sensitive-data routing decisions; controls how long a session stays pinned to the on-premise model selected by a routing guardrail. Default is 3600
 | LITELLM_SSL_CIPHERS | SSL/TLS cipher configuration for faster handshakes. Controls cipher suite preferences for OpenSSL connections.
 | LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE | AWS KMS encrypted license for LiteLLM
+| LITELLM_TELEMETRY_DISABLED | Set to `true` to force usage telemetry off, overriding `LITELLM_TELEMETRY_GROUPS` and the Admin UI settings. See [Usage telemetry](./telemetry)
 | LITELLM_TELEMETRY_ENDPOINT | HTTPS URL that receives one JSON usage telemetry report per window. When unset, reports are kept in the proxy database. See [Usage telemetry](./telemetry)
 | LITELLM_TELEMETRY_FLUSH_INTERVAL_SECONDS | Length of a usage telemetry report window in seconds. Default is `60`
-| LITELLM_TELEMETRY_LEVEL | Usage telemetry level: `off`, `basic` or `full`. Default is `off`. See [Usage telemetry](./telemetry)
+| LITELLM_TELEMETRY_GROUPS | Comma-separated usage telemetry groups to turn on, such as `heartbeat,request_success`. Overrides the Admin UI settings when set. See [Usage telemetry](./telemetry)
 | LITELLM_TELEMETRY_RETENTION_DAYS | Days to keep usage telemetry reports stored in the proxy database. Default is `30`
 | LITELLM_TELEMETRY_SETTLE_TIMEOUT_SECONDS | Seconds a finished request waits for its provider attempts to be logged before its telemetry row is written. Default is `2`
 | LITELLM_TPM_TOKEN_RESERVATION_ENABLED | Default `true`. Set to `false` to disable pre-request TPM reservation in the v3 rate limiter and apply actual usage after each real-time request completes. This removes one Redis operation per request, but concurrent requests may temporarily exceed the TPM limit. This setting does not apply to `POST /v1/batches`, which uses a [separate input-file limiter](../batches#how-rate-limiting-for-batches-api-works). See [Estimated output tokens](./users#estimated-output-tokens-requests-without-max_tokens). |
