@@ -21,14 +21,14 @@ With an endpoint set, each worker POSTs one JSON report per window to it, and on
 
 ## Groups
 
-Each group needs the one it builds on. Turning a group off strips its fields before anything is counted, so rows that differed only in those fields merge into one
+Each group needs the one it builds on. `token_info` and `request_taxonomy` both build on `request_success`, so either can be on without the other. Turning a group off strips its fields before anything is counted, so rows that differed only in those fields merge into one
 
 | Group | Needs | Adds |
 |---|---|---|
 | `heartbeat` | | The report header: instance id, version, window and which groups are on. With only this group a report has no rows |
 | `request_success` | `heartbeat` | Request rows with endpoint, status classes, stream, LiteLLM cache hit, whether the Rust gateway handled the request, request count, provider attempts and the three latency histograms |
 | `token_info` | `request_success` | Token sums and provider prompt-cache hit on each request row |
-| `request_taxonomy` | `token_info` | Provider and deployment hash on each request row, plus provider attempt rows |
+| `request_taxonomy` | `request_success` | Provider and deployment hash on each request row, plus provider attempt rows |
 | `event_details` | `request_taxonomy` | Block counts, block types and allowlisted header names on each request row |
 | `instance_configuration` | `heartbeat` | Names of allowlisted config keys that are set |
 | `page_navigation` | `heartbeat` | Admin UI page views and tab switches |
@@ -63,7 +63,7 @@ Each worker folds what it sees into in-memory counters and emits one report per 
 | `provider_cache_hit` | `token_info` only. Whether the last provider call reported a prompt cache read |
 | `stream` | Whether the response was streamed |
 
-Each request row carries `request_count`, histograms of `latency_total_ms`, `latency_to_headers_ms` and `latency_to_first_token_ms` as seen by the client, and `provider_attempts` (how many provider calls retries and fallbacks made). With `token_info` it also carries sums of `input_tokens`, `output_tokens`, `cache_read_tokens` and `cache_write_tokens`. With `event_details` it also carries a `block_count` histogram, `block_types` counts (`text`, `image`, `audio`, `file`, `tool_use`, `tool_result`, `thinking`, `other`) and `header_keys` counts
+Each request row carries `request_count`, histograms of `latency_total_ms`, `latency_to_headers_ms` and `latency_to_first_token_ms` as seen by the client, and `provider_attempts` (how many provider calls retries and fallbacks made). With `token_info` it also carries sums of `input_tokens`, `output_tokens` and `cache_read_tokens`. With `event_details` it also carries a `block_count` histogram, `block_types` counts (`text`, `image`, `audio`, `file`, `tool_use`, `tool_result`, `thinking`, `other`) and `header_keys` counts
 
 `header_keys` only names headers from a fixed allowlist: `anthropic-beta`, `anthropic-version`, `openai-beta`, `openai-organization`, `x-litellm-api-key`, `x-litellm-disable-callbacks`, `x-litellm-enable-message-redaction`, `x-litellm-num-retries`, `x-litellm-tags`, `x-litellm-timeout`, `x-stainless-lang` and `x-stainless-package-version`. Any other header is counted as `other`. Header values are never read
 
@@ -71,7 +71,7 @@ Each request row carries `request_count`, histograms of `latency_total_ms`, `lat
 
 **Admin UI events** (`page_navigation`) count page views and tab clicks as `page`, `action` and `target`, for example `{"page": "playground", "action": "click", "target": "tab=compare", "count": 1}`. The page is the first segment of the dashboard route and never contains an id, and the proxy rejects any event that does not match a short lowercase pattern. The browser asks the proxy whether `page_navigation` is on and only then sends these to the proxy's own `POST /telemetry/ui_events` route, never to a third party
 
-Latency histograms use the bucket bounds 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000 and 120000 ms, with a last bucket for anything slower
+Latency histograms use the bucket bounds 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000 and 120000 ms, with a last bucket for anything slower. Each histogram in a report is a list of counts, one per bucket, and the bounds are written once per report under `histogram_bounds`
 
 ## Export reports
 
